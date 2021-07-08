@@ -20,5 +20,6 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # path('', include(apps.urls)),
+    path('', include('apps.users.urls')),  # 用户路由
+    path('', include('apps.verifications.urls')),  # 验证码路由
 ]

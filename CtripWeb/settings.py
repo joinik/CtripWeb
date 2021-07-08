@@ -38,6 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',   # 跨域应用解决
+    'rest_framework',   # rest_framework应用解决
+    'apps.users',    # user子应用
+    'apps.areas',    # areas子应用
+    'apps.verifications',    # 验证子应用
 ]
 
 MIDDLEWARE = [
@@ -78,7 +82,7 @@ WSGI_APPLICATION = 'CtripWeb.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'TravelWebsite',
+        'NAME': 'traveldj',
         'USER': "zhihu",
         'PASSWORD': "123456",
         'HOST': "127.0.0.1",
@@ -126,19 +130,33 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 # 或配置白名单:
-CORS_ORIGIN_WHITELIST = (
-
-    '127.0.0.1:8000',   # 后端
-    'localhost:8000',   #
-    '127.0.0.1:8080',   # 前端
-    'localhost:8080',
+CORS_ALLOWED_ORIGINS = (
+    'http://127.0.0.1:8000',   # 后端
+    'http://localhost:8000',   #
+    'http://127.0.0.1:8080',   # 前端
+    'http://localhost:8080',
+    'http://www.travelweb.site:8000',  # 后端
+    'http://www.travelweb.site:8080',  # 前端
     # 'ads-cms-api.aataotao.com:8000'  #
     # 'taoduoduo-test.oss-cn-shenzhen.aliyuncs.com:80',  # 线上
     # '10.0.2.187:8080'  # 本地
 )
 
 CORS_ALLOW_CREDENTIALS = True  # 允许携带cookie
-
+CORS_ALLOW_HEADERS = (
+    'XMLHttpRequest',
+    'X_FILENAME',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'sessionid',
+    'Pragma',
+)
 
 LOGGING = {
     'version': 1,
@@ -181,3 +199,84 @@ LOGGING = {
     }
 
 }
+
+
+#   '应用的名字'
+AUTH_USER_MODEL = 'users.User'
+
+CACHES = {
+    "default": {  # 默认
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/0",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
+    "session": {  # session
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
+    "image_code": {  # image_code
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/2",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
+    "history": {  # 用户浏览记录
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/3",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
+    "carts": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/4",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    },
+}
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "session"
+
+
+####  邮箱配置
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.163.com'
+EMAIL_PORT = 25
+# 发送邮件的邮箱
+EMAIL_HOST_USER = 'jk177668@163.com'
+# 在邮箱中设置的客户端授权密码
+EMAIL_HOST_PASSWORD = 'RCJXXSUCDZXWCTQU'
+# 收件人看到的发件人
+EMAIL_FROM = 'Zhihu旅游商城<jk177668@163.com>'
+# 邮箱验证链接
+EMAIL_VERIFY_URL = 'http://www.TravelWeb.site:8080/success_verify_email.html'
+
+
+## jwt 设置
+REST_FRAMEWORK = {
+    # 异常处理
+    'EXCEPTION_HANDLER': 'utils.exceptions.exception_handler',
+
+    # 认证
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
+}
+import datetime
+JWT_AUTH = {
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=1),
+    # 修改JWT登录视图的构造响应数据的函数
+    'JWT_RESPONSE_PAYLOAD_HANDLER': 'apps.users.utils.jwt_response_payload_handler',
+
+}
+# 修改Django用户认证后端类
+AUTHENTICATION_BACKENDS = ['apps.users.utils.UsernameMobileAuthBackend']
